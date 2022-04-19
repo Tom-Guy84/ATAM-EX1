@@ -6,7 +6,7 @@ movq $0, %r12 #r12 = &dst
 movq $0, %r13 #r13 = src->prev
 movq $0, %r14 #r14 = dst->prev
 movq $0, %r15 #r15 = current->next
-movq $0, %rdi #rdi is a flag to identify witch switch need to be made
+movq $0, %r8 #r8 is a flag to identify witch switch need to be made
 movq (src), %rdx
 movq (dst), %rax
 cmp %rdx, %rax
@@ -37,13 +37,13 @@ jmp whileLoop_HW1
 srcEqHead_HW1:
 lea (head), %r13
 movq %r10, %r11
-movq $1, %rdi
+movq $1, %r8
 jmp whileLoop_HW1
 
 dstEqHead_HW1:
 lea (head), %r14
 movq %r10, %r12
-movq $2, %rdi
+movq $2, %r8
 jmp whileLoop_HW1
 
 tmpEqSrc_HW1:
@@ -62,42 +62,74 @@ jmp tmpNotEqDst_HW1
 
 switch_HW1:
 testq %r11, %r11 #if r11 or r12 are null, exit.
-jmp exit_HW1
+jz exit_HW1
 testq %r12, %r12
-jmp exit_HW1
+jz exit_HW1
 
 movq 8(%r11), %rdi #rdi = src->next
+cmpq %rdi, %r12
 movq 8(%r12), %rsi #rsi = dst->next
-addq $8, %r11 #starting to switch src->next with dst->next
-movq %rsi, (%r11)
-lea 8(%r13), %r11
-addq $8, %r12
-movq %rdi, (%r12)
-lea 8(%r14), %r12
-cmp $1, %rdi
+je srcIsPrevForDest_HW1
+cmpq %rsi, %r11
+je dstIsPrevForDest_HW1
+leaq 8(%r11), %r9 #starting to switch src->next with dst->next
+movq %rsi, (%r9)
+leaq 8(%r12), %r9
+movq %rdi, (%r9)
+cmp $1, %r8
 je firstCaseSwitch_HW1
-cmp $2, %rdi
+cmp $2, %r8
 je secondCaseSwitch_HW1
 
 #here both sorce and dst are not in the first node
-addq $8, %r13 #starting to switch src->prev->next with dst->prev->next
+leaq 8(%r13), %r13 #starting to switch src->prev->next with dst->prev->next
 movq %r12, (%r13)
-addq $8, %r14
+leaq 8(%r14), %r14
 movq %r11, (%r14)
 jmp exit_HW1
 
 firstCaseSwitch_HW1: #here if src is in the first node
 movq %r12, (%r13)
-addq $8, %r14
-movq %r11, (%r14)
+cmpq %r14, %r11
+je exit_HW1
+leaq 8(%r14), %r9
+movq %r11, (%r9)
 jmp exit_HW1
 
 secondCaseSwitch_HW1: #here if dst is in the first node
 movq %r11, (%r14)
-addq $8, %r13
+cmpq %r12, %r13
+je exit_HW1
+leaq 8(%r13), %r9
+movq %r12, (%r9)
+jmp exit_HW1
+
+srcIsPrevForDest_HW1:
+leaq 8(%r11), %r9
+movq %rsi, (%r9)
+leaq 8(%r12), %r9
+movq %r11, (%r9)
+cmp $1, %r8
+je firstCaseSwitch_HW1
+cmp $2, %r8
+je secondCaseSwitch_HW1
+leaq 8(%r13), %r13
 movq %r12, (%r13)
+jmp exit_HW1
+
+
+dstIsPrevForDest_HW1:
+leaq 8(%r12), %r9
+movq %rdi, (%r9)
+leaq 8(%r11), %r9
+movq %r12, (%r9)
+cmp $1, %r8
+je firstCaseSwitch_HW1
+cmp $2, %r8
+je secondCaseSwitch_HW1
+leaq 8(%r14), %r14
+movq %r11, (%r14)
+jmp exit_HW1
+
 
 exit_HW1:
-ret
-
-
