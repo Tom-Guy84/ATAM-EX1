@@ -4,7 +4,6 @@
 .section .text
 
 _start:
-#_HW1
     movq %rsp, %rbp #for correct debugging
 #your code here
 #%rax:=array1 address,%rbx:=array2,%rcx:=mergedArray,%r10:=index1,%r9:=index2,%r11d:= curr_num_arr1
